@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmassist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .main-container {
+            display: flex;
+            height: 100vh;
+            max-height: 100vh;
+        }
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            max-width: 50%;
+        }
+        .visualization-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #fcfcfc;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f9f9f9;
+        }
+        .chat-message {
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 95%;
+            word-wrap: break-word;
+        }
+        .chat-message.bot {
+            background: #e3f2fd;
+            align-self: flex-start;
+        }
+        .chat-message.user {
+            background: #dcf8c6;
+            align-self: flex-end;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+        .chat-input button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+        .drug-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .drug-tag {
+            background: #e3f2fd;
+            border: 1px solid #b3e5fc;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .drug-tag .remove {
+            margin-left: 5px;
+            cursor: pointer;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .drug-tag .remove:hover {
+            color: #0056b3;
+        }
+        .analyze-btn {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none;
+        }
+        .analyze-btn:hover {
+            background: #218838;
+        }
+        .drug-property {
+            margin-bottom: 5px;
+        }
+        .side-effects-list {
+            margin-top: 10px;
+        }
+        .side-effect-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .side-effect-count {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #007bff;
+        }
+        .sub-section-title {
+            font-weight: bold;
+            margin-top: 8px;
+            margin-bottom: 3px;
+            color: #0056b3;
+        }
+        .data-source {
+            font-size: 0.8em;
+            font-style: italic;
+            color: #666;
+            margin-top: 5px;
+        }
+        .common-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .drug-info-card {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .drug-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #007bff;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .effect-drug-tag {
+            display: inline-block;
+            background: #e3f2fd;
+            font-size: 12px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-right: 3px;
+            margin-bottom: 3px;
+        }
+        .similar-effects {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+        .risk-high {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .risk-moderate {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            color: #ff8f00;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .risk-low {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .visualization-header {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .molecule-container {
+            width: 100%;
+            height: 250px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .molecule-placeholder {
+            text-align: center;
+            color: #666;
+        }
+        .visualization-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-style: italic;
+        }
+        .risk-summary {
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #2196f3;
+        }
+        .interaction-graph {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .metrics-container {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #metricsChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+    <script src="/static/vis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left side - Chat -->
+        <div class="chat-section">
+            <div class="chat-container">
+                <header>
+                    <h1>Pharmassist</h1>
+                </header>
+                <div class="chat-box" id="chatBox">
+                    <div class="chat-message bot">Hello! I'm Pharmassist. Enter the names of multiple drugs to analyze side effects, potential interactions, and risk levels. Please add one drug at a time.</div>
+                </div>
+                <div id="drugListContainer" style="padding: 10px;">
+                    <div class="section-title">Drug List:</div>
+                    <div class="drug-list" id="drugList"></div>
+                    <button id="analyzeBtn" class="analyze-btn" onclick="analyzeDrugs()">Analyze Drug Combination</button>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="userInput" placeholder="Type a drug name...">
+                    <button onclick="addDrug()">Add Drug</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right side - Visualization -->
+        <div class="visualization-section" id="visualizationSection">
+            <div class="visualization-empty">
+                Add drugs and click "Analyze" to see visualizations
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let drugsList = [];
+        let currentAnalysisData = null;
+        
+        function addDrug() {
+            let userInput = document.getElementById("userInput");
+            let chatBox = document.getElementById("chatBox");
+            let drugList = document.getElementById("drugList");
+            let drugName = userInput.value.trim();
+            
+            if (drugName !== "") {
+                // Add user message to chat
+                let userChat = document.createElement("div");
+                userChat.classList.add("chat-message", "user");
+                userChat.textContent = "Add drug: " + drugName;
+                chatBox.appendChild(userChat);
+                
+                // Add drug to list
+                if (!drugsList.includes(drugName)) {
+                    drugsList.push(drugName);
+                    
+                    // Create drug tag
+                    let drugTag = document.createElement("div");
+                    drugTag.classList.add("drug-tag");
+                    drugTag.innerHTML = drugName + '<span class="remove" onclick="removeDrug(\'' + drugName + '\')">✕</span>';
+                    drugList.appendChild(drugTag);
+                    
+                    // Add bot confirmation
+                    let botReply = document.createElement("div");
+                    botReply.classList.add("chat-message", "bot");
+                    botReply.textContent = `Added ${drugName} to the list. Add more drugs or click "Analyze Drug Combination" when ready.`;
+                    chatBox.appendChild(botReply);
+                    
+                    // Show analyze button if we have at least 2 drugs
+                    document.getElementById("analyzeBtn").style.display = drugsList.length >= 2 ? "block" : "none";
+                } else {
+                    // Drug already in list
+                    let botReply = document.createElement("div");
+                    botReply.classList.add("chat-message", "bot");
+                    botReply.textContent = `${drugName} is already in your list. Please add a different drug.`;
+                    chatBox.appendChild(botReply);
+                }
+                
+                // Clear input field
+                userInput.value = "";
+                
+                // Scroll to bottom
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+        
+        function removeDrug(drugName) {
+            // Remove from array
+            drugsList = drugsList.filter(drug => drug !== drugName);
+            
+            // Remove from UI
+            let drugList = document.getElementById("drugList");
+            Array.from(drugList.children).forEach(tag => {
+                if (tag.textContent.includes(drugName)) {
+                    drugList.removeChild(tag);
+                }
+            });
+            
+            // Update analyze button visibility
+            document.getElementById("analyzeBtn").style.display = drugsList.length >= 2 ? "block" : "none";
+            
+            // Add message to chat
+            let chatBox = document.getElementById("chatBox");
+            let botReply = document.createElement("div");
+            botReply.classList.add("chat-message", "bot");
+            botReply.textContent = `Removed ${drugName} from the list.`;
+            chatBox.appendChild(botReply);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        function determineRiskLevel(effect, count) {
+            // Define high-risk side effects
+            const highRiskEffects = [
+                'death', 'cardiac arrest', 'heart attack', 'stroke', 'seizure', 
+                'anaphylaxis', 'kidney failure', 'liver failure', 'respiratory failure',
+                'severe bleeding', 'coma', 'suicidal', 'suicide'
+            ];
+            
+            // Check if effect contains any high-risk keywords
+            if (highRiskEffects.some(risk => effect.toLowerCase().includes(risk))) {
+                return 'high';
+            }
+            
+            // Based on count of reports
+            if (count > 1000) {
+                return 'high';
+            } else if (count > 300) {
+                return 'moderate';
+            } else {
+                return 'low';
+            }
+        }
+        
+        function getRiskBadge(risk) {
+            if (risk === 'high') {
+                return '<span class="risk-high">High Risk</span>';
+            } else if (risk === 'moderate') {
+                return '<span class="risk-moderate">Moderate Risk</span>';
+            } else {
+                return '<span class="risk-low">Low Risk</span>';
+            }
+        }
+        
+        function analyzeDrugs() {
+            if (drugsList.length < 2) {
+                alert("Please add at least 2 drugs to analyze.");
+                return;
+            }
+            
+            let chatBox = document.getElementById("chatBox");
+            
+            // Add user action message
+            let userChat = document.createElement("div");
+            userChat.classList.add("chat-message", "user");
+            userChat.textContent = "Analyze drugs: " + drugsList.join(", ");
+            chatBox.appendChild(userChat);
+            
+            // Add typing indicator
+            let botTyping = document.createElement("div");
+            botTyping.classList.add("chat-message", "bot");
+            botTyping.textContent = "Analyzing drug combinations...";
+            botTyping.id = "botTyping";
+            chatBox.appendChild(botTyping);
+            
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Call the actual API instead of using mock data
+            fetch('/api/multi_drug_info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    drug_names: drugsList
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Store data for visualization
+                currentAnalysisData = data;
+
+                // Remove typing indicator
+                document.getElementById("botTyping").remove();
+
+                let botReply = document.createElement("div");
+                botReply.classList.add("chat-message", "bot");
+
+                // Calculate risk levels
+                let highRiskCount = 0;
+                let moderateRiskCount = 0;
+                let lowRiskCount = 0;
+
+                // Format the analysis results for chat
+                botReply.innerHTML = `<strong>Drug Combination Analysis</strong><br>`;
+
+                // Risk summary section
+                botReply.innerHTML += `<div class="risk-summary">`;
+
+                if (data.common_side_effects && data.common_side_effects.length > 0) {
+                    // Count risk levels
+                    data.common_side_effects.forEach(effect => {
+                        const risk = determineRiskLevel(effect.term, effect.count);
+                        if (risk === 'high') highRiskCount++;
+                        else if (risk === 'moderate') moderateRiskCount++;
+                        else lowRiskCount++;
+                    });
+
+                    // Overall risk assessment
+                    let overallRisk = 'low';
+                    if (highRiskCount > 0) overallRisk = 'high';
+                    else if (moderateRiskCount > 2) overallRisk = 'moderate';
+
+                    botReply.innerHTML += `<strong>Risk Assessment:</strong> ${getRiskBadge(overallRisk)}<br>`;
+                    botReply.innerHTML += `Found ${highRiskCount} high risk, ${moderateRiskCount} moderate risk, and ${lowRiskCount} low risk common side effects.<br>`;
+
+                    // Top concern if exists
+                    if (data.common_side_effects.length > 0) {
+                        let topEffect = data.common_side_effects[0];
+                        let topRisk = determineRiskLevel(topEffect.term, topEffect.count);
+                        botReply.innerHTML += `Top concern: ${topEffect.term} ${getRiskBadge(topRisk)}`;
+                    }
+                } else {
+                    botReply.innerHTML += `No common side effects data available to assess risk.`;
+                }
+
+                botReply.innerHTML += `</div>`;
+
+                // Metrics section - Display the dynamically calculated metrics
+                if (data.f1_score !== undefined && data.accuracy !== undefined && data.aucpr !== undefined) {
+                    botReply.innerHTML += `<div class="metrics-summary">
+                        <strong>Model Performance:</strong> F1: ${(data.f1_score * 100).toFixed(1)}%, 
+                        Accuracy: ${(data.accuracy * 100).toFixed(1)}%, 
+                        AUC-PR: ${(data.aucpr * 100).toFixed(1)}%
+                    </div>`;
+                }
+
+                // Visualization prompt
+                botReply.innerHTML += `<br>Please see the visualization panel for detailed molecular structures, interaction graphs, and model performance metrics.<br>`;
+                botReply.innerHTML += `<br>You can add more drugs or reset the list to start a new analysis.`;
+
+                document.getElementById("chatBox").appendChild(botReply);
+                document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
+
+                // Update visualizations
+                updateVisualization(data);
+
+                // Show performance metrics chart with the dynamically calculated values
+                if (data.f1_score !== undefined && data.accuracy !== undefined && data.aucpr !== undefined) {
+                    visualizeMetrics(data.f1_score, data.accuracy, data.aucpr);
+                }
+            })
+            .catch(error => {
+                // Handle errors
+                document.getElementById("botTyping").remove();
+                
+                let errorMessage = document.createElement("div");
+                errorMessage.classList.add("chat-message", "bot");
+                errorMessage.innerHTML = `<strong>Error:</strong> Failed to analyze drug combination. Please try again.`;
+                chatBox.appendChild(errorMessage);
+                
+                console.error('Error:', error);
+            });
+        }
+        
+        function updateVisualization(data) {
+    let visSection = document.getElementById("visualizationSection");
+    
+    if (!data || data.error) {
+        visSection.innerHTML = `
+            <div class="error-message">
+                Error loading visualization data
+            </div>
+        `;
+        return;
+    }
+    
+    // Create visualization content
+    let visContent = `
+        <h1 class="visualization-title">Drug Analysis Visualization</h1>
+    `;
+    
+    // Individual drug information
+    data.drugs_info.forEach(drug => {
+        visContent += `
+            <div class="drug-info-card">
+                <h2 class="drug-name">
+                    ${drug.drug_name}
+                </h2>
+                <div class="drug-details">
+                    <div class="drug-properties">
+                        <p>**Molecular Formula:** ${drug.molecular_formula}</p>
+                        <p>**Molecular Weight:** ${drug.molecular_weight}</p>
+                        <p>**IUPAC Name:** ${drug.iupac_name || 'N/A'}</p>
+                    </div>
+                </div>
+                
+                <div class="side-effects-section">
+                    <h3>Side Effects:</h3>
+                </div>
+`;
+        
+        if (drug.side_effects && drug.side_effects.length > 0) {
+            drug.side_effects.forEach(effect => {
+                const risk = determineRiskLevel(effect.term, effect.count);
+                visContent += `
+                    <div class="side-effect-item">
+                        <span class="effect-term">${effect.term} ${getRiskBadge(risk)}</span>
+                        <span class="effect-count">${effect.count} reports</span>
+                    </div>
+`;
+            });
+        } else {
+            visContent += `<div class="no-data">No side effect data available</div>`;
+        }
+
+
+        //deepseek
+        visContent += `
+        <div class="actions-container">
+            <button class="feedback-btn" onclick="submitFeedback('${drug.drug_name}', ${JSON.stringify(drug.side_effects)}, 'confirm')">
+                Confirm Accuracy
+            </button>
+            <button class="feedback-btn" onclick="submitFeedback('${drug.drug_name}', ${JSON.stringify(drug.side_effects)}, 'report')">
+                Report Inaccuracy
+            </button>
+        </div>
+    `;
+    });
+    
+    // Common side effects section
+    visContent += `<hr class="section-divider">`;
+    visContent += `
+        <h2 class="common-effects-title">Side Effects of Drugs Combined:</h2>
+    `;
+    
+    if (data.common_side_effects && data.common_side_effects.length > 0) {
+        data.common_side_effects.forEach(effect => {
+            const risk = determineRiskLevel(effect.term, effect.count);
+            visContent += `
+                <div class="common-effect-card">
+                    <div class="effect-header">
+                        <span class="effect-term">${effect.term} ${getRiskBadge(risk)}</span>
+                    </div>
+                    
+                    <div class="drug-tags">`;
+                    
+                    // Add drug tags for each drug with this side effect
+                    effect.drugs.forEach(drug => {
+                        visContent += `<span class="drug-tag">${drug}</span>`;
+                    });
+                    
+                    visContent += `
+                    </div>
+                    
+                    <div class="similar-effects">`;
+                    
+                    // Add similar effects if available
+                    if (effect.similar_effects) {
+                        visContent += `
+                            <div class="similar-effects-list">
+                                Similar effects: ${effect.similar_effects.join(', ')}
+                            </div>
+                        `;
+                    }
+                    
+                    visContent += `
+                        <div class="effect-count">${effect.count} reports</div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        visContent += `<div class="no-data">No common side effects found</div>`;
+    }
+    
+    visContent += `<hr class="section-divider">`;
+    
+    // Interaction graph
+    visContent += `
+        <h2 class="graph-title">Drug Interactions Graph:</h2>
+        
+        <div id="interactionGraph" class="interaction-graph"></div>
+    `;
+    
+    visContent += `
+        <div class="data-sources">Data sources: PubChem, FDA Adverse Event Reporting System, GNN Analysis</div>
+    `;
+    
+    // Update visualization section
+    visSection.innerHTML = visContent;
+
+    // Add this line to create the graph after the content is loaded
+    createInteractionGraph(data);
+}
+
+function createInteractionGraph(data) {
+    // Wait for the DOM to be updated
+    setTimeout(() => {
+        const container = document.getElementById('interactionGraph');
+
+        // Check if the container exists
+        if (!container) {
+            console.error('Interaction graph container not found');
+            return;
+        }
+        
+        // Check if we have enough data
+        if (!data || !data.drugs_info || data.drugs_info.length < 2) {
+            container.innerHTML = '<div class="error-message">Not enough data to create interaction graph (need at least 2 drugs)</div>';
+            return;
+        }
+
+        // Create nodes for drugs and side effects
+        const nodes = [];
+        const edges = [];
+
+        // Add drug nodes
+        data.drugs_info.forEach(drug => {
+            nodes.push({
+                id: drug.drug_name,
+                label: drug.drug_name,
+                group: 'drugs',
+                shape: 'circle',
+                color: {
+                    background: '#e3f2fd',
+                    border: '#0056b3',
+                    highlight: {
+                        background: '#bbdefb',
+                        border: '#0056b3'
+                    }
+                },
+                font: { size: 16, color: '#333' },
+                size: 30
+            });
+        });
+
+        // Add side effect nodes and edges
+        if (data.common_side_effects && data.common_side_effects.length > 0) {
+            data.common_side_effects.forEach(effect => {
+                // Only include side effects that connect multiple drugs
+                if (effect.drugs && effect.drugs.length > 1) {
+                    // Determine node color based on risk
+                    const risk = determineRiskLevel(effect.term, effect.count);
+                    let nodeColor, borderColor;
+
+                    if (risk === 'high') {
+                        nodeColor = '#ffebee';
+                        borderColor = '#c62828';
+                    } else if (risk === 'moderate') {
+                        nodeColor = '#fff8e1';
+                        borderColor = '#ff8f00';
+                    } else {
+                        nodeColor = '#e8f5e9';
+                        borderColor = '#2e7d32';
+                    }
+
+                    // Add node for side effect
+                    nodes.push({
+                        id: effect.term,
+                        label: effect.term,
+                        title: `Reported: ${effect.count} times\nRisk level: ${risk}`,
+                        group: 'side_effects',
+                        shape: 'box',
+                        color: {
+                            background: nodeColor,
+                            border: borderColor,
+                            highlight: {
+                                background: nodeColor,
+                                border: borderColor
+                            }
+                        },
+                        font: { size: 12, color: '#333' }
+                    });
+
+                    // Add edges from each drug to this side effect
+                    effect.drugs.forEach(drugName => {
+                        edges.push({
+                            from: drugName,
+                            to: effect.term,
+                            width: Math.min(Math.max(Math.log10(effect.count) * 0.5, 1), 5),
+                            length: 150,
+                            title: `${drugName} → ${effect.term}`
+                        });
+                    });
+                }
+            });
+        }
+
+        // Create the network only if we have nodes
+        if (nodes.length > 0) {
+            const networkData = {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            };
+
+            const options = {
+                layout: {
+                    improvedLayout: true,
+                    hierarchical: false
+                },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    },
+                    stabilization: {
+                        iterations: 1000
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: false,
+                    navigationButtons: true,
+                    keyboard: true,
+                    multiselect: true
+                },
+                nodes: {
+                    shadow: {
+                        enabled: true,
+                        size: 5,
+                        x: 2,
+                        y: 2
+                    },
+                    borderWidth: 2
+                },
+                edges: {
+                    smooth: {
+                        type: 'continuous',
+                        roundness: 0.5
+                    },
+                    shadow: {
+                        enabled: true,
+                        size: 3,
+                        x: 1,
+                        y: 1
+                    }
+                }
+            };
+
+            // Clear any previous content in the container
+            container.innerHTML = '';
+
+            // Create the network
+            try {
+                new vis.Network(container, networkData, options);
+            } catch (error) {
+                console.error('Error creating network:', error);
+                container.innerHTML = '<div class="error-message">Error creating visualization</div>';
+            }
+        } else {
+            container.innerHTML = '<div class="error-message">No interaction data available</div>';
+        }
+    }, 100);
+}
+
+// Add this function to your script section in index.html
+function submitFeedback(drugName, sideEffects, feedbackType) {
+    fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            drug_name: drugName,
+            side_effects: sideEffects,
+            feedback_type: feedbackType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Thank you for your feedback!');
+        } else {
+            alert('Error submitting feedback: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting feedback');
+    });
+}
+
+function visualizeMetrics(f1, accuracy, aucpr) {
+    const visSection = document.getElementById("visualizationSection");
+    
+    // Convert to numbers in case strings are returned
+    f1 = parseFloat(f1);
+    accuracy = parseFloat(accuracy);
+    aucpr = parseFloat(aucpr);
+
+    // Create container for metrics
+    const metricHTML = `
+        <div class="metrics-container">
+            <div class="visualization-header">Model Performance Metrics</div>
+            <div class="drug-info-card" style="position: relative; height:40vh; width:80%">
+                <canvas id="metricsChart"></canvas>
+            </div>
+            <div class="metrics-explanation">
+                <p><strong>F1 Score (${(f1 * 100).toFixed(1)}%):</strong> Balance between precision and recall in identifying common side effects.</p>
+                <p><strong>Accuracy (${(accuracy * 100).toFixed(1)}%):</strong> Percentage of correctly classified side effects.</p>
+                <p><strong>AUC-PR (${(aucpr * 100).toFixed(1)}%):</strong> Area under precision-recall curve, measures performance across thresholds.</p>
+            </div>
+        </div>
+    `;
+    
+    // Prepend metrics to visualization section
+    visSection.innerHTML = metricHTML + visSection.innerHTML;
+
+    // Get canvas context
+    const ctx = document.getElementById('metricsChart').getContext('2d');
+    
+    // Destroy existing chart instance if exists
+    if (window.metricsChart instanceof Chart) {
+        window.metricsChart.destroy();
+    }
+
+    // Create new chart
+    window.metricsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['F1 Score', 'Accuracy', 'AUC-PR'],
+            datasets: [{
+                label: 'Metric Values',
+                data: [f1, accuracy, aucpr],
+                backgroundColor: [
+                    'rgba(0, 123, 255, 0.7)',
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(0, 123, 255, 1)',
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1.0,
+                    ticks: {
+                        callback: function(value) {
+                            return (value * 100).toFixed(0) + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) {
+                                label += (context.parsed.y * 100).toFixed(2) + '%';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Side Effect Analysis Model Performance',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+}
+        
+        // Allow adding drugs with Enter key
+        document.getElementById("userInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                addDrug();
+            }
+        });
+    </script>
+</body>
+</html>
